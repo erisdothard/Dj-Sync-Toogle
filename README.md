@@ -18,6 +18,17 @@ Share sheet ─► detect tracklist ─► match each track ─► save playlist
                         └── Auto-sync ON ───┘   (OFF: review matches first)
 ```
 
+## No Mac? Use the web version
+
+`web/` is the same flow as a static web app, deployed to GitHub Pages at
+**https://erisdothard.github.io/Dj-Sync-Toogle/**. It runs entirely in the browser: Spotify login
+(PKCE, your own Client ID), YouTube description + comments through the Data API, Mixcloud through
+its API, pasted text for everything else. A one-action iOS Shortcut ("Open URLs" with the shared
+link appended to `?share=`) puts it in the share sheet; the page shows the steps. Spotify only,
+since Apple Music on the web needs a paid developer token.
+
+Test the parser with `node web/test.js`.
+
 ## How it works
 
 1. The **share extension** receives a URL, text, or image.
