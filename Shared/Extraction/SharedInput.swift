@@ -86,7 +86,7 @@ enum ExtensionInputLoader {
         if let item = await loadItem(provider, .image) {
             if let image = item as? UIImage { return image }
             if let url = item as? URL, let image = UIImage(contentsOfFile: url.path) { return image }
-            if let url = item as? NSURL, let image = UIImage(contentsOfFile: url.path) { return image }
+            if let url = item as? NSURL, let path = url.path, let image = UIImage(contentsOfFile: path) { return image }
             if let data = item as? Data, let image = UIImage(data: data) { return image }
         }
         // Photos sometimes only offers a data representation.
