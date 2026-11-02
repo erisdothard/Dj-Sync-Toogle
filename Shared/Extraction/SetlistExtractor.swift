@@ -100,10 +100,55 @@ struct YouTubeDescriptionFetcher {
     }
 
     func fetch(videoID: String) async throws -> ExtractedPage {
-        if let key = SyncSettings.effectiveYouTubeAPIKey, let page = try? await fetchViaAPI(videoID: videoID, key: key) {
-            return page
+        let key = SyncSettings.effectiveYouTubeAPIKey
+        var page: ExtractedPage
+        if let key, let fromAPI = try? await fetchViaAPI(videoID: videoID, key: key) {
+            page = fromAPI
+        } else {
+            page = try await fetchViaHTML(videoID: videoID)
         }
-        return try await fetchViaHTML(videoID: videoID)
+        // Tracklists often sit in a pinned or top comment instead of the description.
+        // Comments are not in the page HTML, so this needs the Data API key.
+        if let key, let comments = try? await fetchComments(videoID: videoID, key: key) {
+            page.embeddedDescriptions += comments
+        }
+        return page
+    }
+
+    private struct CommentsResponse: Decodable {
+        struct Item: Decodable {
+            struct Snippet: Decodable {
+                struct TopLevel: Decodable {
+                    struct CommentSnippet: Decodable {
+                        let textOriginal: String
+                    }
+                    let snippet: CommentSnippet
+                }
+                let topLevelComment: TopLevel
+            }
+            let snippet: Snippet
+        }
+        let items: [Item]
+    }
+
+    /// Top 50 comments by relevance (1 quota unit). The detector picks whichever text parses best.
+    private func fetchComments(videoID: String, key: String) async throws -> [String] {
+        var components = URLComponents(string: "https://www.googleapis.com/youtube/v3/commentThreads")!
+        components.queryItems = [
+            URLQueryItem(name: "part", value: "snippet"),
+            URLQueryItem(name: "videoId", value: videoID),
+            URLQueryItem(name: "order", value: "relevance"),
+            URLQueryItem(name: "maxResults", value: "50"),
+            URLQueryItem(name: "textFormat", value: "plainText"),
+            URLQueryItem(name: "key", value: key)
+        ]
+        let (data, response) = try await session.data(from: components.url!)
+        guard let http = response as? HTTPURLResponse, (200..<300).contains(http.statusCode) else {
+            throw ExtractionError.unreadablePage
+        }
+        return try JSONDecoder().decode(CommentsResponse.self, from: data).items
+            .map(\.snippet.topLevelComment.snippet.textOriginal)
+            .filter { $0.count >= 40 }
     }
 
     private struct APIResponse: Decodable {

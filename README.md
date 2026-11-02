@@ -5,7 +5,7 @@ Apple Music as a playlist.
 
 Works with:
 
-- **YouTube mixes** whose description ("bio") holds the tracklist, shared straight from the YouTube app
+- **YouTube mixes** with the tracklist in the description ("bio") or in a pinned/top comment, shared straight from the YouTube app
 - **SoundCloud** and **Mixcloud** sets with the tracklist in the description
 - **Copied text** from 1001Tracklists, Instagram captions, Telegram, anywhere
 - **Screenshots** of a tracklist (OCR on device)
@@ -91,7 +91,9 @@ add them to that app's allowlist (5 people max).
 By default the description is read from the watch page's embedded player JSON. That works today
 but is unofficial. For a stable, compliant path create a free **YouTube Data API v3** key in
 Google Cloud, restrict it to the iOS bundle IDs, and paste it into Settings → Advanced (or
-`YOUTUBE_API_KEY` in the xcconfig). One video costs 1 of the 10,000 free daily quota units.
+`YOUTUBE_API_KEY` in the xcconfig). One video costs 2 of the 10,000 free daily quota units
+(description + comments). **Comments are only read with a key**: they are not part of the page
+HTML, so without one only the description is checked.
 
 ## Testing
 
@@ -120,7 +122,6 @@ In the app, **Tools → Try it** runs the exact share-sheet pipeline on pasted t
 ## Roadmap
 
 - Listen mode with ShazamKit for sets that have no tracklist at all
-- YouTube chapters and pinned comments as fallbacks when the description has no tracklist
 - Append to an existing playlist instead of creating one per set
 - Android share target
 
