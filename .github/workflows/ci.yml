@@ -7,7 +7,7 @@ on:
 jobs:
   core-tests:
     name: SetlistCore tests
-    runs-on: macos-14
+    runs-on: macos-15
     steps:
       - uses: actions/checkout@v4
       - name: Run tests
@@ -15,7 +15,7 @@ jobs:
 
   app-build:
     name: iOS app build (simulator)
-    runs-on: macos-14
+    runs-on: macos-15
     steps:
       - uses: actions/checkout@v4
       - name: Install XcodeGen
