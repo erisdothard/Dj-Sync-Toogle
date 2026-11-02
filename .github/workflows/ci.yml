@@ -1,0 +1,37 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  core-tests:
+    name: SetlistCore tests
+    runs-on: macos-14
+    steps:
+      - uses: actions/checkout@v4
+      - name: Run tests
+        run: swift test --package-path Packages/SetlistCore
+
+  app-build:
+    name: iOS app build (simulator)
+    runs-on: macos-14
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install XcodeGen
+        run: brew install xcodegen
+      - name: Generate project
+        run: |
+          cp Config/Secrets.example.xcconfig Config/Secrets.xcconfig
+          xcodegen generate
+      - name: Build
+        run: |
+          set -o pipefail
+          xcodebuild build \
+            -project DJSyncToggle.xcodeproj \
+            -scheme DJSyncToggle \
+            -destination 'generic/platform=iOS Simulator' \
+            -skipPackagePluginValidation \
+            CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO CODE_SIGN_IDENTITY="" \
+            | tee build.log | grep -E "error:|warning: unre|BUILD (SUCCEEDED|FAILED)" || true
+          grep -q "BUILD SUCCEEDED" build.log

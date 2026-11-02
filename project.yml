@@ -1,0 +1,111 @@
+# XcodeGen spec. Run `make generate` (or `xcodegen generate`) to produce DJSyncToggle.xcodeproj.
+name: DJSyncToggle
+
+options:
+  bundleIdPrefix: com.syntra
+  deploymentTarget:
+    iOS: "17.0"
+  xcodeVersion: "15.0"
+  createIntermediateGroups: true
+
+# Copy Config/Secrets.example.xcconfig to Config/Secrets.xcconfig and fill it in (gitignored).
+configFiles:
+  Debug: Config/Secrets.xcconfig
+  Release: Config/Secrets.xcconfig
+
+settings:
+  base:
+    SWIFT_VERSION: "5.9"
+    MARKETING_VERSION: "0.1.0"
+    CURRENT_PROJECT_VERSION: "1"
+    CODE_SIGN_STYLE: Automatic
+    SWIFT_STRICT_CONCURRENCY: minimal
+    ENABLE_USER_SCRIPT_SANDBOXING: YES
+
+packages:
+  SetlistCore:
+    path: Packages/SetlistCore
+
+targets:
+  DJSyncToggle:
+    type: application
+    platform: iOS
+    sources:
+      - App
+      - Shared
+    dependencies:
+      - package: SetlistCore
+      - target: ShareExtension
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.syntra.djsynctoggle
+        TARGETED_DEVICE_FAMILY: "1,2"
+    info:
+      path: App/Info.plist
+      properties:
+        CFBundleDisplayName: DJ Sync Toggle
+        UILaunchScreen: {}
+        UISupportedInterfaceOrientations:
+          - UIInterfaceOrientationPortrait
+        UISupportedInterfaceOrientations~ipad:
+          - UIInterfaceOrientationPortrait
+          - UIInterfaceOrientationLandscapeLeft
+          - UIInterfaceOrientationLandscapeRight
+        NSAppleMusicUsageDescription: DJ Sync Toggle saves tracklists as playlists in your Apple Music library.
+        SpotifyClientID: $(SPOTIFY_CLIENT_ID)
+        YouTubeAPIKey: $(YOUTUBE_API_KEY)
+        CFBundleURLTypes:
+          - CFBundleURLName: com.syntra.djsynctoggle
+            CFBundleURLSchemes:
+              - djsynctoggle
+        ITSAppUsesNonExemptEncryption: false
+    entitlements:
+      path: App/DJSyncToggle.entitlements
+      properties:
+        com.apple.security.application-groups:
+          - group.com.syntra.djsynctoggle
+
+  ShareExtension:
+    type: app-extension
+    platform: iOS
+    sources:
+      - ShareExtension
+      - Shared
+    dependencies:
+      - package: SetlistCore
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.syntra.djsynctoggle.share
+        TARGETED_DEVICE_FAMILY: "1,2"
+    info:
+      path: ShareExtension/Info.plist
+      properties:
+        CFBundleDisplayName: DJ Sync
+        NSAppleMusicUsageDescription: DJ Sync Toggle saves tracklists as playlists in your Apple Music library.
+        SpotifyClientID: $(SPOTIFY_CLIENT_ID)
+        YouTubeAPIKey: $(YOUTUBE_API_KEY)
+        NSExtension:
+          NSExtensionPointIdentifier: com.apple.share-services
+          NSExtensionPrincipalClass: $(PRODUCT_MODULE_NAME).ShareViewController
+          NSExtensionAttributes:
+            # Any one of these is enough for the extension to appear in the share sheet.
+            NSExtensionActivationRule:
+              NSExtensionActivationSupportsWebURLWithMaxCount: 1
+              NSExtensionActivationSupportsText: true
+              NSExtensionActivationSupportsImageWithMaxCount: 1
+    entitlements:
+      path: ShareExtension/ShareExtension.entitlements
+      properties:
+        com.apple.security.application-groups:
+          - group.com.syntra.djsynctoggle
+
+schemes:
+  DJSyncToggle:
+    build:
+      targets:
+        DJSyncToggle: all
+        ShareExtension: all
+    run:
+      config: Debug
+    archive:
+      config: Release
