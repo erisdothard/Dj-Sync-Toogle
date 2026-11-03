@@ -5,8 +5,24 @@ const store = {
   get: (k, d) => { try { const v = localStorage.getItem(k); return v === null ? d : JSON.parse(v); } catch { return d; } },
   set: (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); } catch {} },
 };
+const defaults = window.DJSYNC_DEFAULTS || {};
 const settings = Object.assign({ autoSync: true, clientId: "", ytKey: "", prefix: "" }, store.get("settings", {}));
 const saveSettings = () => store.set("settings", settings);
+if (!settings.clientId && defaults.spotifyClientId) settings.clientId = defaults.spotifyClientId;
+if (!settings.ytKey && defaults.youtubeApiKey) settings.ytKey = defaults.youtubeApiKey;
+// One-time setup link: ?clientId=...&ytKey=... stores the values in this browser and is then removed from the URL.
+{
+  const q = new URLSearchParams(location.search);
+  let changed = false;
+  if (q.get("clientId")) { settings.clientId = q.get("clientId").trim(); changed = true; }
+  if (q.get("ytKey")) { settings.ytKey = q.get("ytKey").trim(); changed = true; }
+  if (changed) {
+    saveSettings();
+    q.delete("clientId"); q.delete("ytKey");
+    const rest = q.toString();
+    window.history.replaceState(null, "", location.pathname + (rest ? "?" + rest : ""));
+  }
+}
 const history = store.get("history", []);
 const saveHistory = () => store.set("history", history);
 
