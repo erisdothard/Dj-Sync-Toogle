@@ -128,9 +128,12 @@
       <ol>
         <li>Open <b>Shortcuts</b> → <b>+</b> → name it <b>DJ Sync</b>.</li>
         <li>Tap the <b>ⓘ</b> info button → turn on <b>Show in Share Sheet</b> → Done.</li>
-        <li>Add action <b>Open URLs</b>. In its URL field type <code id="shortcutUrl"></code> and then insert the <b>Shortcut Input</b> variable right after the <code>=</code>.</li>
-        <li>Done. In YouTube: Share → More → <b>DJ Sync</b>.</li>
+        <li>Add action <b>Choose from Menu</b>. Prompt: <b>Sync how?</b> Options: <b>Auto-sync</b> and <b>Review first</b>.</li>
+        <li>Inside the <b>Auto-sync</b> branch add <b>Open URLs</b> with <code id="shortcutUrlAuto"></code> and insert the <b>Shortcut Input</b> variable right after the <code>=</code>.</li>
+        <li>Inside the <b>Review first</b> branch add <b>Open URLs</b> with <code id="shortcutUrlReview"></code> and insert <b>Shortcut Input</b> the same way.</li>
+        <li>Done. In YouTube: Share → More → <b>DJ Sync</b> → pick Auto-sync or Review first.</li>
       </ol>
+      <p class="muted">Skip the menu if you prefer: one <b>Open URLs</b> with <code id="shortcutUrl"></code> uses the switch on this page.</p>
     </details>
   </section>
 

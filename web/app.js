@@ -37,6 +37,8 @@ $("ytKey").value = settings.ytKey;
 $("redirectUri").textContent = REDIRECT_URI;
 $("referrer").textContent = baseURL + "*";
 $("shortcutUrl").textContent = baseURL + "?share=";
+$("shortcutUrlAuto").textContent = baseURL + "?auto=1&share=";
+$("shortcutUrlReview").textContent = baseURL + "?auto=0&share=";
 $("autoSync2").checked = settings.autoSync;
 const autoHint = () => {
   const text = settings.autoSync ? "Shared sets are saved without asking." : "You review the matches before saving.";
@@ -372,6 +374,12 @@ function renderHistory() {
     alert(e.message);
   }
   const q = new URLSearchParams(location.search);
+  // ?auto=1 / ?auto=0 from the Shortcut menu sets the toggle for this and later runs.
+  if (q.get("auto") === "1" || q.get("auto") === "0") {
+    settings.autoSync = q.get("auto") === "1";
+    saveSettings();
+    autoHint();
+  }
   const shared = q.get("share") || q.get("text") || q.get("url");
   if (shared) {
     window.history.replaceState(null, "", baseURL);
