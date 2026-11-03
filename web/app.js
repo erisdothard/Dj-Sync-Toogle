@@ -217,6 +217,20 @@ const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "
 const statusView = (icon, title, msg, buttons = "") =>
   `<div class="status"><div class="big">${icon}</div><b>${esc(title)}</b>${msg ? `<p class="muted">${esc(msg)}</p>` : ""}${buttons}</div>`;
 
+// Audio fingerprinting fallback (AudD through /api/identify, Vercel only): used when a link has no written tracklist.
+async function identifyByAudio(url) {
+  const r = await fetch("/api/identify", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ url }) });
+  const j = await r.json().catch(() => ({}));
+  if (!r.ok) throw new Error(j.error || `Audio identification failed (${r.status})`);
+  return j.tracks || [];
+}
+
+function audioSetlist(tracks, { title, sourceURL }) {
+  // Feed the recognised tracks through the normal parser so ids, timestamps and mashup handling are identical.
+  const lines = tracks.map((t) => `[${t.offset}] ${t.artist} - ${t.title}`);
+  return parseTracklist(lines.join("\n"), { title, sourceURL });
+}
+
 async function run({ text }, { ignoreDuplicate = false } = {}) {
   if (!text || !text.trim()) return;
   show(statusView("🔎", "Looking for a tracklist…"));
@@ -228,9 +242,27 @@ async function run({ text }, { ignoreDuplicate = false } = {}) {
   }
   if (!setlist.isLikely) {
     const n = setlist.searchable.length;
-    return show(statusView("❓", "No tracklist found", n ? `Only ${n} track line${n === 1 ? "" : "s"} found.` : "Try sharing the tracklist text or a different link.",
-      `<button class="secondary" id="back">Back</button>`)), ($("back").onclick = reset);
+    const url = soleURL(text);
+    show(statusView("❓", "No tracklist found", n ? `Only ${n} track line${n === 1 ? "" : "s"} found.` : url ? "Nothing written in the description or comments." : "Try sharing the tracklist text or a different link.",
+      (url ? `<button class="primary" id="audio">Identify by audio</button>` : "") + `<button class="secondary" id="back">Back</button>`));
+    $("back").onclick = reset;
+    if (url) $("audio").onclick = async () => {
+      show(statusView("🎧", "Listening to the set…", "Fingerprinting the audio. This runs on the server."));
+      try {
+        const tracks = await identifyByAudio(url.href);
+        if (tracks.length < 2) throw new Error(tracks.length ? "Only one track was recognised." : "No tracks were recognised in the audio.");
+        setlist = audioSetlist(tracks, { title: setlist.title, sourceURL: url.href });
+      } catch (e) {
+        return show(statusView("⚠️", "Could not identify the audio", e.message, `<button class="secondary" id="back">Back</button>`)), ($("back").onclick = reset);
+      }
+      await continueRun(setlist, text, ignoreDuplicate);
+    };
+    return;
   }
+  await continueRun(setlist, text, ignoreDuplicate);
+}
+
+async function continueRun(setlist, text, ignoreDuplicate) {
   if (!spotify.connected) {
     show(statusView("🎧", "Connect Spotify to continue", "You'll come straight back here afterwards.",
       `<button class="primary" id="connect">Connect Spotify</button><button class="secondary" id="back">Back</button>`));
