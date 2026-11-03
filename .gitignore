@@ -20,3 +20,4 @@ Config/Secrets.xcconfig
 
 # OS
 .DS_Store
+.vercel
