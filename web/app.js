@@ -37,10 +37,19 @@ $("ytKey").value = settings.ytKey;
 $("redirectUri").textContent = REDIRECT_URI;
 $("referrer").textContent = baseURL + "*";
 $("shortcutUrl").textContent = baseURL + "?share=";
-const autoHint = () => { $("autoHint").textContent = settings.autoSync ? "Shared sets are saved without asking." : "You review the matches before saving."; };
+$("autoSync2").checked = settings.autoSync;
+const autoHint = () => {
+  const text = settings.autoSync ? "Shared sets are saved without asking." : "You review the matches before saving.";
+  $("autoHint").textContent = text;
+  $("autoHint2").textContent = text;
+  $("autoSync").checked = settings.autoSync;
+  $("autoSync2").checked = settings.autoSync;
+};
 autoHint();
 
-$("autoSync").onchange = (e) => { settings.autoSync = e.target.checked; saveSettings(); autoHint(); };
+const onToggle = (e) => { settings.autoSync = e.target.checked; saveSettings(); autoHint(); };
+$("autoSync").onchange = onToggle;
+$("autoSync2").onchange = onToggle;
 $("clientId").oninput = (e) => { settings.clientId = e.target.value.trim(); saveSettings(); };
 $("ytKey").oninput = (e) => { settings.ytKey = e.target.value.trim(); saveSettings(); };
 $("copyRedirect").onclick = () => navigator.clipboard?.writeText(REDIRECT_URI);
@@ -200,8 +209,8 @@ const flow = $("flow");
 const inputCard = $("inputCard");
 let state = null;
 
-function show(html) { flow.innerHTML = html; flow.classList.remove("hidden"); inputCard.classList.add("hidden"); window.scrollTo(0, 0); }
-function reset() { flow.classList.add("hidden"); inputCard.classList.remove("hidden"); state = null; $("input").value = ""; }
+function show(html) { flow.innerHTML = html; flow.classList.remove("hidden"); $("flowHeader").classList.remove("hidden"); inputCard.classList.add("hidden"); window.scrollTo(0, 0); }
+function reset() { flow.classList.add("hidden"); $("flowHeader").classList.add("hidden"); inputCard.classList.remove("hidden"); state = null; $("input").value = ""; }
 const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 const statusView = (icon, title, msg, buttons = "") =>
   `<div class="status"><div class="big">${icon}</div><b>${esc(title)}</b>${msg ? `<p class="muted">${esc(msg)}</p>` : ""}${buttons}</div>`;
